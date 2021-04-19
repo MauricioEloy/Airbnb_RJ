@@ -47,7 +47,7 @@ Assim faz-se necessário verificar quais atributos vamos ou não manter.
 Optou-se por excluir as variáveis:
 
 'listing_url', 'scrape_id','last_scraped', 'name', 'description', 'neighborhood_overview', 'picture_url', 'host_id', 'host_url', 'host_name','host_location', 'host_about', 'host_response_time', 'host_acceptance_rate','host_thumbnail_url', 'host_picture_url', 'host_total_listings_count','neighbourhood','neighbourhood_group_cleansed', 'latitude', 'longitude', 'bathrooms', 'minimum_minimum_nights', 'maximum_minimum_nights','minimum_maximum_nights','maximum_maximum_nights', 'minimum_nights_avg_ntm', 'maximum_nights_avg_ntm', 'calendar_updated', 'has_availability', 'availability_30', 'availability_60', 'availability_90', 'availability_365', 'calendar_last_scraped', 'number_of_reviews_ltm', 'number_of_reviews_l30d', 
-'first_review', 'last_review', 'license', 'calculated_host_listings_count_entire_homes', 'calculated_host_listings_count_private_rooms', 'calculated_host_listings_count_shared_rooms','reviews_per_month', 'host_neighbourhood', 'neighbourhood_cleansed', 'bathrooms_text'.
+'first_review', 'last_review', 'license', 'calculated_host_listings_count_entire_homes', 'calculated_host_listings_count_private_rooms', 'calculated_host_listings_count_shared_rooms','reviews_per_month', 'host_neighbourhood' e 'bathrooms_text'.
 
 Embora algumas informações pudessem ser relevantes no modelo, como por exemplo 'bathrooms', em nosso dataset estes dados estão vazios.
 
@@ -58,6 +58,8 @@ Após estar de posse com as possíveis variáveis a serem utilizadas no modelo, 
 * 'host_response_rate' apresenta dois problemas: i) está como variável categórica e ii) tem dados faltantes (30.1%). A solução para o primeiro problema foi desmembrar a variável 'host_response_rate' e criar a variável numérica 'host_response_rate_numeric', já para o segundo problema, optou-se pelo preencimento utilizando-se da média;
 
 * 'property_type' apresenta o problema de ter uma alta cardinalidade. A solução foi utilizar as informações da variável 'property_type' e criar a variável 'property_type_mod' com as cinco categorias mais frequentes, representando 86,7% dos dados e criar a sexta categoria, 'Other values';
+
+* 'neighbourhood_cleansed' apresenta o problema de ter uma alta cardinalidade. A solução foi utilizar as informações da variável 'neighbourhood_cleansed' e criar a variável 'neighbourhood_cleansed_mod' com as seis categorias mais frequentes, e criar a sexta categoria, 'Other values';
 
 * 'host_verifications' e 'amenities' são variáveis que recebem uma lista como valores, deste modo, fez-se o desmenbramento destas listas criando novas variáveis binárias (dummie).
 
@@ -97,11 +99,9 @@ Neste momento foi realizada a análise de importância dos atributos, existem di
 
 Através da análise de componentes pricipais foi possível verificar que faz-se necessário o uso de 36 componentes para que tenhamos uma variabilidade sigificativamente compatível com os dados originais.
 
-Utilizando-se das 3 primeiras componentes e de um valor absoluto mínimo de 0.24, o ideal seria superior a 0.5, mas neste caso não teríamos nenhuma, chegou-se a conclusão que as seguintes variáveis importantes: 
-'property_type_mod_Private room in apartment', 'review_scores_value', 'host_verifications_ overnment_id', 'review_scores_accuracy', 'room_type_Entire home/apt', 'bedrooms', host_verifications_ offline_government_id', 'review_scores_rating', 'review_scores_cleanliness', host_identity_verified', 'review_scores_communication', 'review_scores_checkin', property_type_mod_Entire apartment', 'accommodates', 'host_verifications_ jumio', review_scores_location', 'room_type_Private room'
+Utilizando-se das 3 primeiras componentes e de um valor absoluto mínimo de 0.24, o ideal seria superior a 0.5, mas neste caso não teríamos nenhuma, chegou-se a conclusão que as seguintes variáveis importantes: 'review_scores_location','property_type_mod_Entire apartment','room_type_Entire home/apt','review_scores_checkin','bedrooms','room_type_Private room','host_identity_verified','review_scores_accuracy','accommodates','review_scores_cleanliness','review_scores_rating','host_verifications_ government_id','review_scores_communication','host_verifications_ offline_government_id','host_verifications_ jumio' e 'review_scores_value'
 
-Também foram incorporadas as 36 componentes principais no dataset, esta imcorporação será utilizada na estratégia de comparação dos modelos.
-
+Também foram incorporadas as 41 componentes principais no dataset, esta imcorporação será utilizada na estratégia de comparação dos modelos.
 
 ##### <span style="color:blue">LASSO</span>
 
@@ -113,229 +113,35 @@ Neste caso chegou-se a conclusão que apenas duas variáveis não tinha o coefic
 
 A estratégia utilizada foi efetuar a intersecção de inportância apresentada nos dois métodos para se ter um conjunto final de atributos importantes.
 
-Tendo então o seguinte resultado de atributos importantes:
-'review_scores_communication','review_scores_checkin','host_verifications_ ffline_government_id','property_type_mod_Private room in apartment','accommodates','review_scores_value','host_verifications_ government_id','review_scores_accuracy','room_type_Entire home/apt','bedrooms','host_verifications_ jumio','review_scores_location','review_scores_rating','review_scores_cleanliness','host_identity_verified'
+Tendo então o seguinte resultado de atributos importantes: 'review_scores_accuracy','host_identity_verified','review_scores_location','accommodates','review_scores_cleanliness','room_type_Entire home/apt','review_scores_rating','review_scores_checkin','host_verifications_ government_id','review_scores_communication','host_verifications_ offline_government_id','bedrooms','host_verifications_ jumio' e 'review_scores_value'
 
 #### <span style="color:blue">Criação do Modelo</span>
 
 A estratégia utilizada foi a comparação do desempenho dos modelos em 5 cenários diferentes, dos quais 4 temos a aplicação dos filtros relativos aos atributos importantes e o último utilizando-se do dataset sem os filtros.
 
-Os modelos utilizados para a compáração foram: 
-
-Baseline - DummyRegressor(),
-LinearRegression(), 
-SGDRegressor(), 
-SVR(), 
-KNeighborsRegressor(),
-DecisionTreeRegressor(random_state=42),
-RandomForestRegressor(), 
-GradientBoostingRegressor(), 
-BaggingRegressor(), 
-ExtraTreesRegressor(), 
-AdaBoostRegressor(), 
-xgboost.XGBRegressor().
+Os modelos utilizados para a comparação foram uma regressão linear: Linear Regression e três modelos baseados em árvores: Decision Tree Regressor, Random Forest Regressor e XGBoost Regressor.
 
 Para a comparação utilizou-se de 4 princípios:
 
-* r2_score: quanto maior melhor;
-* mean_absolute_error: quanto menor melhor;
-* a vizualização do gráfico de resíduos;
-* teste de Breusch-Pagan: se p-value<0.05, a hipótese nula, que consiste na homocedasticidade dos resíduos, é rejeitada.
-* teste de Kolmogorov-Smirvoc: se p-value<0.05 os valores não apresentam uma distribuição normal.
-
-#### <span style="color:blue">Otimização de parâmetros</span>
-
-
+* R2 Score: quanto maior melhor;
+* Mean Absolute Error: quanto menor melhor;
+* Teste de Breusch-Pagan: se p-value<0.05, a hipótese nula, que consiste na homocedasticidade dos resíduos, é rejeitada.
+* Teste de Kolmogorov-Smirvoc: se p-value<0.05 os valores não apresentam uma distribuição normal.
 
 #### <span style="color:blue">Conclusão</span>
 
+O modelo com melhor comportamento foi o Random Forest Regressor, tanto aplicado com as variáveis do LASSO quanto as variáveis originais, optou-se pelos atributos LASSO.
 
+As seguintes métricas de avaliação foram obtidas:
+* R2: 0.832
+* MAE: 235.72
 
+Ainda não pode-se dizer que é o modelo desejável, uma vez que, o MAE está elevado, e os resíduos ndo modelo não passaram nos testes de Breusch-Pagan e Kolmogorov-Smirvoc.
 
+#### <span style="color:blue">Próximos Passos</span>
 
+De modo a obter melhores resultados, os próximos passos seriam:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-a. Como foi a definição da sua estratégia de modelagem?
-
-b. Como foi definida a função de custo utilizada?
-
-c. Qual foi o critério utilizado na seleção do modelo final?
-
-d. Qual foi o critério utilizado para validação do modelo?
-Por que escolheu utilizar este método?
-
-e. Quais evidências você possui de que seu modelo é
-suficientemente bom?
-
-
-
-
+1. Realizar uma feature engineering mais detalhada;
+2. Após a obtenção do modelo com melhor comportamento, efetuar hyperparameter optimization;
+3. Avaliar se estas alterações foram relevantes.
